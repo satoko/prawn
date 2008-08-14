@@ -130,7 +130,25 @@ module Prawn
         add_content %Q{
           ET
         }
-      end  
+      end       
+      
+      module StyleParser
+
+        module_function
+
+        TAG_PATTERN = %r{(</?[ib]>)}
+
+        def process(text) #:nodoc:
+          segments = text.split(TAG_PATTERN).delete_if{|x| x.empty? }
+          segments
+        end
+
+        def style_tag?(text)
+          !!(text =~ TAG_PATTERN)
+        end
+
+      end
+      
     end
   end
 end

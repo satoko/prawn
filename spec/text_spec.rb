@@ -92,6 +92,43 @@ describe "font style support" do
       
 end
 
+describe "An inline style parser" do
+  before :each do
+    @parser = Prawn::Document::Text::StyleParser
+  end
+ 
+  it "should wrap the string in an array if styles are not detected" do
+    @parser.process("Hello World").should == ["Hello World"]
+  end
+ 
+  it "should parse italic tags" do
+    @parser.process("Hello <i>Fine</i> World").should ==
+      ["Hello ", "<i>","Fine", "</i>", " World"]
+  end
+  
+  it "should parse bold tags" do
+    @parser.process("Some very <b>bold text</b>").should ==
+      ["Some very ", "<b>","bold text", "</b>"]
+  end
+ 
+  it "should parse mixed italic and bold tags" do
+    @parser.process("Hello <i>Fine <b>World</b></i>").should ==
+      ["Hello ", "<i>", "Fine ", "<b>", "World", "</b>", "</i>"]
+  end
+ 
+  it "should not split out other tags than <i>, <b>, </i>, </b>" do
+    @parser.process("Hello <indigo>Charlie</indigo>").should ==
+      ["Hello <indigo>Charlie</indigo>"]
+  end
+  
+  it "be able to check whether a string needs to be parsed" do
+     @pdf = Prawn::Document.new
+     assert !@parser.style_tag?("Hello World")
+     assert @parser.style_tag?("Hello <i>Fine</i> World")
+  end
+  
+end
+
 describe "when drawing text" do     
    
    before(:each) { create_pdf } 
