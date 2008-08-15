@@ -58,7 +58,7 @@ module Prawn
         options[:size] ||= font.size
 
         return wrapped_text(text,options) unless options[:at]
-        
+                
         x,y = translate(options[:at]) 
         
         font.size(options[:size]) do                 
@@ -138,8 +138,28 @@ module Prawn
 
         TAG_PATTERN = %r{(</?[ib]>)}
 
+        STATES = {
+          "<b>" => { :normal => :bold,
+                      :italic => :bold_italic },
+          "</b>" => { :bold_italic => :italic,
+                      :bold => :normal },
+          "<i>" => { :normal => :italic,
+                      :bold => :bold_italic },
+          "</i>" => { :bold_italic => :bold,
+                      :italic => :normal }
+        }
+
+
         def process(text) #:nodoc:
           segments = text.split(TAG_PATTERN).delete_if{|x| x.empty? }
+          state = :normal
+          segments.map! do |s|
+            if new_state = STATES.key?(s) && STATES[s][state]
+              state = new_state
+            else
+              s
+            end
+          end
           segments
         end
 

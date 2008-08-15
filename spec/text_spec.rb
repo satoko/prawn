@@ -97,23 +97,24 @@ describe "An inline style parser" do
     @parser = Prawn::Document::Text::StyleParser
   end
  
-  it "should wrap the string in an array if styles are not detected" do
+  it "should default to normal when styles are not detected" do
     @parser.process("Hello World").should == ["Hello World"]
   end
  
   it "should parse italic tags" do
     @parser.process("Hello <i>Fine</i> World").should ==
-      ["Hello ", "<i>","Fine", "</i>", " World"]
+      ["Hello ",:italic, "Fine", :normal, " World"]
   end
   
   it "should parse bold tags" do
     @parser.process("Some very <b>bold text</b>").should ==
-      ["Some very ", "<b>","bold text", "</b>"]
+      ["Some very ", :bold, "bold text", :normal]
   end
- 
+           
+  #FIXME: We may want to optimize to ignore directives at the end of a string.
   it "should parse mixed italic and bold tags" do
     @parser.process("Hello <i>Fine <b>World</b></i>").should ==
-      ["Hello ", "<i>", "Fine ", "<b>", "World", "</b>", "</i>"]
+      ["Hello ", :italic, "Fine ", :bold_italic, "World", :italic, :normal]
   end
  
   it "should not split out other tags than <i>, <b>, </i>, </b>" do
