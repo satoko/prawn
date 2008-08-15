@@ -42,14 +42,20 @@ module Prawn
       # If an empty box is rendered to your PDF instead of the character you 
       # wanted it usually means the current font doesn't include that character.
       #
-      def text(text,options={}) 
-        if StyleParser.style_tag?(text)
-          return render_stylized_text(text, options)
-        end                     
+      def text(text,options={})                
         
         # we'll be messing with the strings encoding, don't change the users
         # original string
-        text = text.dup               
+        text = text.dup  
+         
+        unless options[:ignore_styles]
+          if StyleParser.style_tag?(text)
+            return render_stylized_text(text, options)
+          end   
+          
+          text.gsub!("&lt;","<")
+          text.gsub!("&gt;",">")
+        end     
         
         original_font  = font.name                                              
         
@@ -106,7 +112,7 @@ module Prawn
           case(segment)
           when Symbol
             style = segment
-          when String              
+          when String         
             lines = segment.lines 
             if lines.length == 1    
               hold = true unless index + 1 == segments.length   
