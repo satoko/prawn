@@ -10,5 +10,13 @@ Prawn::Document.generate("family_style.pdf") do
       text "I'm writing in #{f} (#{s})"             
     end
   end
+  
+  font "Helvetica"
+  
+  text "Normal"
+  text "Bold",        :style => :bold
+  text "Bold Italic", :style => :bold_italic
+  text "Italic",      :style => :italic
+  text "Normal"
 
 end
