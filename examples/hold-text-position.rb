@@ -8,5 +8,8 @@ Prawn::Document.generate("hold-text-position.pdf") do
   font "Helvetica", :style => :bold
   text "baz baz " * 12, :hold_position => true
   font "Helvetica", :style => :normal
-  text "bar bar " * 12                             
+  text "bar bar " * 12 
+  text "Hello ", :at => [300,400], :hold_position => true   
+  font "Helvetica", :style => :italic     
+  text "Kitty"                           
 end

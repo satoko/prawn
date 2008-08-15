@@ -60,11 +60,17 @@ module Prawn
         return wrapped_text(text,options) unless options[:at]
                 
         x,y = translate(options[:at]) 
-        
+               
         font.size(options[:size]) do                 
           add_text_content(text,x,y,options)
+        end  
+        
+        if options[:hold_position]         
+          # FIXME: Ugly hacka hacka
+          self.y = y + font.height + font.metrics.descender / 1000.0 * font.size
+          @text_x_pos = x + font.width_of(text) - bounds.absolute_left        
         end
-      end
+      end   
                        
       private 
 
