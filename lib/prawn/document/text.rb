@@ -42,10 +42,14 @@ module Prawn
       # If an empty box is rendered to your PDF instead of the character you 
       # wanted it usually means the current font doesn't include that character.
       #
-      def text(text,options={})
+      def text(text,options={}) 
+        if StyleParser.style_tag?(text)
+          return render_stylized_text(text, options)
+        end                     
+        
         # we'll be messing with the strings encoding, don't change the users
         # original string
-        text = text.dup                    
+        text = text.dup               
         
         original_font  = font.name                                              
         
@@ -64,7 +68,7 @@ module Prawn
         
         options[:size] ||= font.size       
         
-        if options[:at]                
+        if options[:at]              
           x,y = translate(options[:at]) 
                
           font.size(options[:size]) do                 
@@ -72,7 +76,7 @@ module Prawn
           end  
         
           if options[:hold_position]         
-            # FIXME: Ugly hacka hacka
+            # FIXME: Ugly hacka hacka  
             self.y = y + font.height + font.metrics.descender / 1000.0 * font.size
             @text_x_pos = x + font.width_of(text) - bounds.absolute_left        
           end  
@@ -87,20 +91,49 @@ module Prawn
 
       def move_text_position(dy)
          (y - dy) < @margin_box.absolute_bottom ? start_new_page : self.y -= dy       
+      end 
+      
+      def render_stylized_text(string,options={})       
+        if options[:at] 
+          raise "Inline Styles currently not supported for direct positioning"+
+                " via :at. Using a bounding box and wrapped text, or submit " +
+                "a patch at git://github.com/sandal/prawn.git"
+        end
+        style = :normal  
+        segments = StyleParser.process(string)  
+        segments.pop while Symbol === segments.last         
+        segments.each_with_index do |segment,index|
+          case(segment)
+          when Symbol
+            style = segment
+          when String              
+            lines = segment.lines 
+            if lines.length == 1    
+              hold = true unless index + 1 == segments.length   
+              text(lines[0], options.merge(:style => style, 
+                                           :hold_position => hold))
+            else
+              lines[1..-2].each do |line| 
+                text(line, options.merge(:style => style)) 
+              end 
+              text(lines[-1], options.merge(:style => style)) 
+            end 
+          end
+        end  
       end
-
-      # TODO: Get kerning working with wrapped text
+      
       def wrapped_text(text,options) 
         options[:align] ||= :left      
-        @text_x_pos ||= 0 
+        @text_x_pos ||= 0     
         
         font.size(options[:size]) do
           text = font.metrics.naive_wrap(text, bounds.right, font.size, 
             :kerning => options[:kerning], :offset => @text_x_pos ) 
 
-          lines = text.lines
-          line_y = nil 
-                                                                              
+          lines = text.lines  
+          
+          starting_x_pos = lines.length == 1 ? @text_x_pos : 0    
+                                                                          
           lines.each do |e|                                                   
             line_y = self.y           
             
@@ -125,8 +158,8 @@ module Prawn
           end 
           
           if options[:hold_position]  
-            self.y = line_y 
-            @text_x_pos = font.width_of(lines.last)
+            self.y += font.height                         
+            @text_x_pos = starting_x_pos + font.width_of(lines.last)      
           end
           
         end
@@ -177,7 +210,8 @@ module Prawn
               s
             end
           end
-          segments
+
+          return segments
         end
 
         def style_tag?(text)
