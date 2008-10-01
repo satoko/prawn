@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = %q{prawn}
-  s.version = "0.2.99.2"
+  s.version = "0.2.99.3"
   s.platform = "ruby"
   s.summary = %q{PDF writing library for Ruby}
   s.require_paths = ["lib"]
