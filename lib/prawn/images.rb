@@ -6,6 +6,7 @@
 # This is free software. Please see the LICENSE and COPYING files for details.
 
 require 'digest/sha1'
+require 'nkf'
 
 module Prawn
 
@@ -22,26 +23,31 @@ module Prawn
     # <tt>:position</tt>::  One of (:left, :center, :right) or an x-offset
     # <tt>:height</tt>:: the height of the image [actual height of the image]
     # <tt>:width</tt>:: the width of the image [actual width of the image]
-    # <tt>:scale</tt>:: scale the dimensions of the image proportionally      
-    # 
-    #   Prawn::Document.generate("image2.pdf", :page_layout => :landscape) do     
-    #     pigs = "#{Prawn::BASEDIR}/data/images/pigs.jpg" 
-    #     image pigs, :at => [50,450], :width => 450                                      
+    # <tt>:scale</tt>:: scale the dimensions of the image proportionally
+    #
+    #   Prawn::Document.generate("image2.pdf", :page_layout => :landscape) do
+    #     pigs = "#{Prawn::BASEDIR}/data/images/pigs.jpg"
+    #     image pigs, :at => [50,450], :width => 450
     #
     #     dice = "#{Prawn::BASEDIR}/data/images/dice.png"
-    #     image dice, :at => [50, 450], :scale => 0.75 
-    #   end   
+    #     image dice, :at => [50, 450], :scale => 0.75
+    #   end
     #
     # If only one of :width / :height are provided, the image will be scaled
-    # proportionally.  When both are provided, the image will be stretched to 
+    # proportionally.  When both are provided, the image will be stretched to
     # fit the dimensions without maintaining the aspect ratio.
     #
-    def image(filename, options={})     
+    def image(filename, options={})
       Prawn.verify_options [:at,:position, :height, :width, :scale], options
-      raise ArgumentError, "#{filename} not found" unless File.file?(filename)  
-      
-      image_content =  File.read_binary(filename)
-      
+
+      if NKF.guess(filename) == NKF::BINARY
+        image_content = filename
+      else
+        raise ArgumentError, "#{ filename_or_data} not found" unless File.file?(filename)
+
+        image_content =  File.read_binary(filename)
+      end
+
       image_sha1 = Digest::SHA1.hexdigest(image_content)
 
       # register the fact that the current page uses images
@@ -66,13 +72,13 @@ module Prawn
         image_registry[image_sha1] = {:obj => image_obj, :info => info}
       end
 
-      # find where the image will be placed and how big it will be  
+      # find where the image will be placed and how big it will be
       w,h = calc_image_dimensions(info, options)
-      if options[:at]       
-        x,y = translate(options[:at]) 
-      else                  
-        x,y = image_position(w,h,options) 
-        move_text_position h   
+      if options[:at]
+        x,y = translate(options[:at])
+      else
+        x,y = image_position(w,h,options)
+        move_text_position h
       end
 
       # add a reference to the image object to the current page
@@ -85,25 +91,25 @@ module Prawn
       add_content instruct % [ w, h, x, y - h, label ]
     end
 
-    private   
-    
+    private
+
     def image_position(w,h,options)
       options[:position] ||= :left
-      x = case options[:position] 
+      x = case options[:position]
       when :left
         bounds.absolute_left
       when :center
-        bounds.absolute_left + (bounds.width - w) / 2.0 
+        bounds.absolute_left + (bounds.width - w) / 2.0
       when :right
         bounds.absolute_right - w
       when Numeric
         options[:position] + bounds.absolute_left
-      end       
-      
+      end
+
       return [x,y]
     end
 
-    def build_jpg_object(data, jpg) 
+    def build_jpg_object(data, jpg)
       color_space = case jpg.channels
       when 1
         :DeviceGray
@@ -119,7 +125,7 @@ module Prawn
           :BitsPerComponent => jpg.bits,
           :Width            => jpg.width,
           :Height           => jpg.height,
-          :Length           => data.size ) 
+          :Length           => data.size )
       obj << data
       return obj
     end
@@ -141,7 +147,7 @@ module Prawn
       if png.bits > 8
         raise ArgumentError, 'PNG uses more than 8 bits'
       end
-      
+
       case png.pixel_bytes
       when 1
         color = :DeviceGray
@@ -157,7 +163,7 @@ module Prawn
                 :BitsPerComponent => png.bits,
                 :Length           => png.img_data.size,
                 :Filter           => :FlateDecode
-                
+
                )
 
       unless png.alpha_channel
@@ -168,7 +174,7 @@ module Prawn
 
       # append the actual image data to the object as a stream
       obj << png.img_data
-      
+
       # sort out the colours of the image
       if png.palette.empty?
         obj.data[:ColorSpace] = color
@@ -178,7 +184,7 @@ module Prawn
         palette_obj << png.palette
 
         # build the color space array for the image
-        obj.data[:ColorSpace] = [:Indexed, 
+        obj.data[:ColorSpace] = [:Indexed,
                                  :DeviceRGB,
                                  (png.palette.size / 3) -1,
                                  palette_obj]
@@ -237,14 +243,14 @@ module Prawn
       h = options[:height] || info.height
 
       if options[:width] && !options[:height]
-        wp = w / info.width.to_f 
+        wp = w / info.width.to_f
         w = info.width * wp
         h = info.height * wp
-      elsif options[:height] && !options[:width]         
+      elsif options[:height] && !options[:width]
         hp = h / info.height.to_f
         w = info.width * hp
-        h = info.height * hp   
-      elsif options[:scale] 
+        h = info.height * hp
+      elsif options[:scale]
         w = info.width * options[:scale]
         h = info.height * options[:scale]
       end
@@ -253,7 +259,7 @@ module Prawn
     end
 
     def detect_image_format(content)
-      top = content[0,128]                       
+      top = content[0,128]
 
       if top[0, 3] == "\xff\xd8\xff"
         return :jpg
