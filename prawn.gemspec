@@ -1,10 +1,24 @@
-Gem::Specification.new do |s|
-  s.name = %q{prawn}
-  s.version = "0.2.99.3"
-  s.platform = "ruby"
-  s.summary = %q{PDF writing library for Ruby}
-  s.require_paths = ["lib"]
-  s.files = FileList["README", "Rakefile", "prawn.gemspec", 'data/fonts/*.{afm,ttf}', '{lib,spec}/**/*.{rb}'].to_a
-  s.date = %q{2008-10-01}
-  s.homepage = %q{http://github.com/satoko/prawn/}
+PRAWN_VERSION = "0.2.99.3"
+
+Gem::Specification.new do |spec|
+  spec.name = "prawn"
+  spec.version = PRAWN_VERSION
+  spec.platform = Gem::Platform::RUBY
+  spec.summary = "A fast and nimble PDF generator for Ruby"
+  spec.files =  Dir.glob("{examples,lib,spec,vendor,data}/**/**/*") +
+                      ["Rakefile"]
+  spec.require_path = "lib"
+
+  spec.test_files = Dir[ "test/*_test.rb" ]
+  spec.has_rdoc = true
+  spec.extra_rdoc_files = %w{README LICENSE COPYING}
+  spec.rdoc_options << '--title' << 'Prawn Documentation' <<
+                       '--main'  << 'README' << '-q'
+  spec.author = "Gregory Brown"
+  spec.email = "  gregory.t.brown@gmail.com"
+  spec.rubyforge_project = "prawn"
+  spec.homepage = "http://prawn.majesticseacreature.com"
+  spec.description = <<END_DESC
+  Prawn is a fast, tiny, and nimble PDF generator for Ruby
+END_DESC
 end
