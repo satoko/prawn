@@ -2,12 +2,13 @@ require 'rubygems'
 require 'rake'
 require 'rake/testtask'
 require "rake/rdoctask"
-require "rake/gempackagetask"  
+require "rake/gempackagetask"
 
-PRAWN_VERSION = "0.2.99" 
+PRAWN_VERSION = "0.2.99"
+PRAWN_VERSION = "0.2.99.2"
 
 task :default => [:test]
-       
+
 desc "Run all tests, test-spec and mocha required"
 Rake::TestTask.new do |test|
   test.libs << "spec"
@@ -17,9 +18,9 @@ end
 
 desc "Show library's code statistics"
 task :stats do
-	require 'code_statistics'
-	CodeStatistics.new( ["Prawn", "lib"], 
-	                    ["Specs", "spec"] ).to_s
+  require 'code_statistics'
+  CodeStatistics.new( ["Prawn", "lib"],
+                      ["Specs", "spec"] ).to_s
 end
 
 desc "genrates documentation"
@@ -30,25 +31,25 @@ Rake::RDocTask.new do |rdoc|
   rdoc.main     = "README"
   rdoc.rdoc_dir = "doc/html"
   rdoc.title    = "Prawn Documentation"
-end     
+end
 
 desc "run all examples, and then diff them against reference PDFs"
-task :examples do 
+task :examples do
   mkdir_p "output"
   examples = Dir["examples/*.rb"]
   t = Time.now
   puts "Running Examples"
-  examples.each { |file| `ruby -Ilib #{file}` }  
-  puts "Ran in #{Time.now - t} s"        
-  `mv *.pdf output`                     
-                   
-  unless RUBY_VERSION < "1.9"    
+  examples.each { |file| `ruby -Ilib #{file}` }
+  puts "Ran in #{Time.now - t} s"
+  `mv *.pdf output`
+
+  unless RUBY_VERSION < "1.9"
     puts "Checking for differences..."
     output = Dir["output/*.pdf"]
-    ref    = Dir["reference_pdfs/*.pdf"]   
+    ref    = Dir["reference_pdfs/*.pdf"]
     output.zip(ref).each do |o,r|
       system "diff -q #{o} #{r}"
-    end                      
+    end
   end
 
 end
@@ -61,7 +62,7 @@ spec = Gem::Specification.new do |spec|
   spec.files =  Dir.glob("{examples,lib,spec,vendor,data}/**/**/*") +
                       ["Rakefile"]
   spec.require_path = "lib"
-  
+
   spec.test_files = Dir[ "test/*_test.rb" ]
   spec.has_rdoc = true
   spec.extra_rdoc_files = %w{README LICENSE COPYING}
