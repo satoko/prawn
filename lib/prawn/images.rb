@@ -43,7 +43,7 @@ module Prawn
       if NKF.guess(filename) == NKF::BINARY
         image_content = filename
       else
-        raise ArgumentError, "#{ filename_or_data} not found" unless File.file?(filename)
+        raise ArgumentError, "#{filename} not found" unless File.file?(filename)
 
         image_content =  File.read_binary(filename)
       end
