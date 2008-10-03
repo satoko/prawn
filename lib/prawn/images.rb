@@ -44,6 +44,7 @@ module Prawn
         image_content = filename
       else
         raise ArgumentError, "#{filename} not found" unless File.file?(filename)
+
         image_content =  File.read_binary(filename)
       end
 
