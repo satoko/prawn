@@ -1,4 +1,4 @@
-PRAWN_VERSION = "0.2.99.3"
+PRAWN_VERSION = "0.2.99.4"
 
 Gem::Specification.new do |spec|
   spec.name = "prawn"
